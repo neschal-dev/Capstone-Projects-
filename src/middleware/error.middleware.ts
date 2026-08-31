@@ -7,6 +7,7 @@ export function globalErrorHandler(
   res: Response,
   next: NextFunction,
 ): void {
+  
   logger.error(error, "Unhandled Error");
 
   res.status(500).json({ success: false, message: "Internal server error" });
