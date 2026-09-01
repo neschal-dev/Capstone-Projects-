@@ -9,13 +9,15 @@ import pool from "./config/db.js";
 
 const app: Express = express();
 
+await pool.connect();
+
 app.use(cors());
 app.use(express.json());
 app.use(urlencoded({ extended: true }));
 
 app.use("/api/v1/", apiRouter);
 
-app.use(notFoundHandler);
+app.use(notFoundHandler); // middleware for invalid endpoint
 app.use(globalErrorHandler);
 
 export default app;

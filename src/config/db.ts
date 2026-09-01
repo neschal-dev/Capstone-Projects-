@@ -1,3 +1,4 @@
+import logger from "../utils/logger.js";
 import { env } from "./env.js";
 import { Pool } from "pg";
 
@@ -9,7 +10,7 @@ const pool = new Pool({
 
 // Fired each time a new client connection is established in the pool.
 pool.on("connect", () => {
-  console.log("Connected to Postgres");
+  logger.info("Connected to Postgres");
 });
 
 // Fired on unexpected errors from idle clients in the pool
@@ -17,7 +18,7 @@ pool.on("connect", () => {
 // recover from this on its own, we exit the process so it can
 // be restarted (e.g. by a process manager) with a fresh pool.
 pool.on("error", (err: Error) => {
-  console.error("Unexpected Postgres error", err);
+  logger.error({ err }, "Unexpected Postgres error");
   process.exit(-1);
 });
 
