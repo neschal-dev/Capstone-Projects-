@@ -1,30 +1,48 @@
-import { findUserByEmail } from "../repository/user.repository.js";
+import {
+  findUserByEmail,
+  findUserByUsername,
+  createUser,
+} from "../repository/user.repository.js";
 import { AppError } from "../utils/appError.js";
-import bcrypt from "bcrypt";
+import { type User } from "../types/users.types.js";
+import { validatePassword } from "../utils/validatePasswordRules.js";
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const USERNAME_REGEX = /^[a-zA-Z0-9_.]{3,30}$/;
 
 export async function registerUser(
+  username: string,
   email: string,
-  //   username: string,
   password: string,
-): Promise<void> {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  const normalizedEmail = email.trim().toLowerCase();
-
-  if (!email || !password)
+): Promise<User> {
+  if (!username || !email || !password) {
     throw AppError.badRequest("Missing required fields.");
+  }
 
-  if (!emailRegex.test(normalizedEmail))
+  const normalizedEmail = email.trim().toLowerCase();
+  const normalizedUsername = username.trim();
+
+  if (!EMAIL_REGEX.test(normalizedEmail)) {
     throw AppError.badRequest("Invalid email format.");
+  }
+  if (!USERNAME_REGEX.test(normalizedUsername)) {
+    throw AppError.badRequest(
+      "Username must be 3-30 characters (letters, numbers, underscore, dot).",
+    );
+  }
+  validatePassword(password);
 
-  // Confirm if user already exists in DB
-  const existingUser = await findUserByEmail(normalizedEmail);
+  const [existingByEmail, existingByUsername] = await Promise.all([
+    findUserByEmail(normalizedEmail),
+    findUserByUsername(normalizedUsername),
+  ]);
 
-  if (existingUser)
-    throw AppError.conflict("User already exist with this email!");
+  if (existingByEmail) {
+    throw AppError.conflict("A user already exists with this email.");
+  }
+  if (existingByUsername) {
+    throw AppError.conflict("This username is already taken.");
+  }
 
-  if (password.length < 8)
-    throw AppError.badRequest("Password must be at least 8 characters long.");
-
-  const passwordHash = await bcrypt.hash(password , 10)
+  return createUser(normalizedUsername, normalizedEmail, password);
 }
