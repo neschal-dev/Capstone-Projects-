@@ -2,10 +2,13 @@ import {
   findUserByEmail,
   findUserByUsername,
   createUser,
+  findUserByEmailWithPassword,
 } from "../repository/user.repository.js";
 import { AppError } from "../utils/appError.js";
 import { type User } from "../types/users.types.js";
 import { validatePassword } from "../utils/validatePasswordRules.js";
+import { compare, compareSync } from "bcrypt";
+import { generateAccessToken } from "../utils/jwt.js";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const USERNAME_REGEX = /^[a-zA-Z0-9_.]{3,30}$/;
@@ -45,4 +48,21 @@ export async function registerUser(
   }
 
   return createUser(normalizedUsername, normalizedEmail, password);
+}
+
+
+export async function loginUser (email : string , plainPassword : string) :Promise<accessToken:string > {
+
+    if ( !email || !password) {
+    throw AppError.badRequest("Missing required fields.");
+  }
+const normalizedEmail = email.trim().toLowerCase();
+const user = await findUserByEmailWithPassword(normalizedEmail)
+if (!user?.hashed_password) throw AppError.unauthorized('Invalid Email or Password'); 
+
+const isPasswordValid = await compare( password , user.hashed_password)
+if (!isPasswordValid) throw AppError.unauthorized('Invalid Email or Password')
+
+  const accessToken = generateAccessToken(user?.id,user?.email, user?.role  )
+  
 }

@@ -1,5 +1,9 @@
 import pool from "../config/db.js";
-import { type DBUser, type User } from "../types/users.types.js";
+import {
+  type DBUser,
+  type DBUserWithPasswordRow,
+  type User,
+} from "../types/users.types.js";
 import bcrypt from "bcrypt";
 
 export async function findUserByEmail(email: string): Promise<DBUser | null> {
@@ -39,4 +43,14 @@ export async function createUser(
     throw new Error("Failed to create user");
   }
   return user;
+}
+
+export async function findUserByEmailWithPassword(
+  email: string,
+): Promise<DBUserWithPasswordRow | null> {
+  const { rows } = await pool.query<DBUserWithPasswordRow>(
+    `SELECT * FROM users WHERE email = $1`,
+    [email],
+  );
+  return rows[0] ?? null;
 }

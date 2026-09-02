@@ -16,4 +16,8 @@ export async function register(req: Request, res: Response) {
     data: user,
   });
 }
-export function login(req: Request, res: Response) {}
+export function login(req: Request, res: Response) {
+  const { email, password } = req.body;
+
+  const logUser = await loginUser (email , password) ; 
+}
