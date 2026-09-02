@@ -50,19 +50,31 @@ export async function registerUser(
   return createUser(normalizedUsername, normalizedEmail, password);
 }
 
-
-export async function loginUser (email : string , plainPassword : string) :Promise<accessToken:string > {
-
-    if ( !email || !password) {
+export async function loginUser(
+  email: string,
+  plainPassword: string,
+): Promise<string> {
+  if (!email || !plainPassword) {
     throw AppError.badRequest("Missing required fields.");
   }
-const normalizedEmail = email.trim().toLowerCase();
-const user = await findUserByEmailWithPassword(normalizedEmail)
-if (!user?.hashed_password) throw AppError.unauthorized('Invalid Email or Password'); 
 
-const isPasswordValid = await compare( password , user.hashed_password)
-if (!isPasswordValid) throw AppError.unauthorized('Invalid Email or Password')
+  const normalizedEmail = email.trim().toLowerCase();
+  const user = await findUserByEmailWithPassword(normalizedEmail);
 
-  const accessToken = generateAccessToken(user?.id,user?.email, user?.role  )
-  
+  if (!user?.hashed_password) {
+    throw AppError.unauthorized("Invalid Email or Password");
+  }
+
+  const isPasswordValid = await compare(plainPassword, user.hashed_password);
+  if (!isPasswordValid) {
+    throw AppError.unauthorized("Invalid Email or Password");
+  }
+
+  const accessToken = generateAccessToken({
+    userId: user.id,
+    email: user.email,
+    role: user.role,
+  });
+
+  return accessToken;
 }

@@ -1,5 +1,5 @@
 import { type Request, type Response } from "express";
-import { registerUser } from "../services/auth.services.js";
+import { loginUser, registerUser } from "../services/auth.services.js";
 
 interface RegisterBody {
   username: string;
@@ -16,8 +16,18 @@ export async function register(req: Request, res: Response) {
     data: user,
   });
 }
-export function login(req: Request, res: Response) {
-  const { email, password } = req.body;
+interface LoginBody {
+  email: string;
+  password: string;
+}
 
-  const logUser = await loginUser (email , password) ; 
+export async function login(req: Request, res: Response) {
+  const { email, password } = req.body as LoginBody;
+
+  const accessToken = await loginUser(email, password);
+
+  res.status(200).json({
+    success: true,
+    data: { accessToken },
+  });
 }
